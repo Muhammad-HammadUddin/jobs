@@ -33,7 +33,10 @@ const clerkWebhooks = async(req, res) => {
 
                     }
                     await User.create(userData);
-                    res.json({})
+                    res.json({ user: userData });
+                    console.log(userData);
+                    console.log("User Created");
+                    console.log(await User.findById(data.id))
                     break;
 
 
@@ -59,6 +62,7 @@ const clerkWebhooks = async(req, res) => {
                 {
                     await User.findByIdAndDelete(data.id);
                     res.json({})
+                    console.log("User Deleted");
                     break;
 
                 }
