@@ -12,9 +12,11 @@ import AddJob from './pages/AddJob';
 import ManageJobs from './pages/ManageJobs';
 import ViewApplication from './pages/ViewApplication';
 import 'quill/dist/quill.snow.css';
+import 'react-toastify/dist/ReactToastify.css'
+import { ToastContainer } from 'react-toastify';
 function App() {
 
-  const {showRecruiterLogin}=useContext(AppContext)
+  const {showRecruiterLogin,companyToken}=useContext(AppContext)
 
   console.log(showRecruiterLogin);
 
@@ -22,15 +24,21 @@ function App() {
     <>
     <div>
       {showRecruiterLogin&&<RecruiterLogin/>}
+      <ToastContainer/>
 
       <Routes>
         <Route path="/" element={<Home/>}/>
         <Route path="/apply-job/:id" element={<Applyjob/>}/>
         <Route path="/applications" element={<Applications/>}/>
         <Route path='/dashboard'element={<Dashboard/>}>
+
+        {companyToken ?<>
         <Route path='add-job' element={<AddJob/>}/>
         <Route path='manage-jobs' element={<ManageJobs/>}/>
-        <Route path='view-applications' element={<ViewApplication/>}/>
+        <Route path='view-applications' element={<ViewApplication/>}/></>
+        :null
+
+}
         </Route>  
         </Routes>
         

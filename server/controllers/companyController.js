@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
 import { v2 as cloudinary } from "cloudinary"
 import Company from "../models/Company.js";
 import generateToken from "../utils/generateToken.js";
+import Job from './../models/Job.js';
+import jobApplication from "../models/JobApplication.js";
 const registerCompany = async(req, res) => {
     const { name, email, password } = req.body;
     const imageFile = req.file;
@@ -72,7 +74,7 @@ const loginCompany = async(req, res) => {
             })
         }
 
-        // 🔴 2. Password match (await zaroori)
+
         const isMatch = await bcrypt.compare(password, company.password)
 
         if (!isMatch) {
@@ -107,11 +109,53 @@ const loginCompany = async(req, res) => {
 export const getCompanyData = async(req, res) => {
 
 
+
+    try {
+        const company = req.company
+        res.json({ success: true, company })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: error.message
+
+        })
+
+
+    }
+
+
+
 }
 
 export const postJob = async(req, res) => {
-    const { title, description, location, salary } = req.body
+    const { title, description, location, salary, level, category } = req.body
     const companyId = req.company._id
+
+    try {
+        const newJob = new Job({
+            title,
+            description,
+            location,
+            salary,
+            date: Date.now(),
+            companyId,
+            level,
+            category
+
+
+
+        })
+
+
+        await newJob.save()
+
+        return res.json({ success: true, newJob })
+
+    } catch (error) {
+
+        res.json({ succes: false, message: error.message })
+
+    }
 
 
 
@@ -125,11 +169,32 @@ export const getCompanyJobApplicants = async(req, res) => {
 
 // Get company posted jobs
 
+
+
 export const getCompanyPostedJobs = async(req, res) => {
 
+
+    try {
+        const companyId = req.company._id
+
+        const jobs = await Job.find({ companyId })
+
+        const jobsData = await Promise.all(jobs.map(async(job) => {
+
+
+            const applicants = await jobApplication.find({ jobId: job._id })
+            return {...job.toObject(), applications: applicants.length }
+
+        }))
+
+        return res.json({ success: true, jobsData })
+
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
 }
 
-// chagne job application status
+// change job application status
 
 
 export const changeJobApplicationStatus = async(req, res) => {
@@ -138,6 +203,26 @@ export const changeJobApplicationStatus = async(req, res) => {
 
 // Change job visibility
 export const changeJobVisibility = async(req, res) => {
+
+    try {
+
+        const { id } = req.body
+        const companyId = req.company._id
+
+
+        const job = await Job.findById(id)
+
+        if (companyId.toString() === job.companyId.toString()) {
+            job.visible = !job.visible
+
+        }
+        await job.save()
+        return res.json({ success: true, job })
+
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+
+    }
 
 }
 

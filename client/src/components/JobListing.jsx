@@ -29,6 +29,7 @@ const JobListing = () => {
   }
 
   useEffect(() => {
+    console.log(jobs)
     const matchesCategory = (job) =>
       selectedCategories.length === 0 ||
       selectedCategories.includes(job.category)
