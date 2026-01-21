@@ -6,10 +6,12 @@ import User from "../models/User.js"
 // Api Controller Function
 
 const clerkWebhooks = async(req, res) => {
+    console.log("here")
     try {
         // Create a svix instance
 
         const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
+        console.log("hre")
 
         await webhook.verify(JSON.stringify(req.body), {
             "svix-id": req.headers["svix-id"],
@@ -17,6 +19,7 @@ const clerkWebhooks = async(req, res) => {
             "svix-signature": req.headers["svix-signature"]
         })
         const { type, data } = req.body;
+        console.log(type)
 
         switch (type) {
             case 'user.created':

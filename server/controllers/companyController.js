@@ -165,6 +165,20 @@ export const postJob = async(req, res) => {
 // Get Company job applicants
 export const getCompanyJobApplicants = async(req, res) => {
 
+    try {
+        const companyId = req.company._id
+
+        const applications = await jobApplication.find({ companyId }).populate('userId', 'name image resume').populate('jobId', 'title location category label salary').exec()
+
+
+        return res.json({ success: true, applications })
+
+
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+
+    }
+
 }
 
 // Get company posted jobs
@@ -198,6 +212,26 @@ export const getCompanyPostedJobs = async(req, res) => {
 
 
 export const changeJobApplicationStatus = async(req, res) => {
+
+
+    try {
+
+        const { id, status } = req.body
+
+
+        await jobApplication.findOneAndUpdate({ _id: id }, { status })
+
+
+        res.json({ success: true, message: "Status Changed" })
+
+
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+
+
+
+    }
+
 
 }
 

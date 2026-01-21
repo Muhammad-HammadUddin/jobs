@@ -1,13 +1,65 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import { assets, jobsApplied } from './../assets/assets'
 import moment from 'moment'
 import Footer from '../components/footer'
+import { useContext } from 'react'
+import { AppContext } from '../context/AppContext'
+import { useAuth, useUser } from '@clerk/clerk-react'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const Applications = () => {
 
+  const {user}=useUser()
+  const {getToken}=useAuth()
   const [isEdit, setIsEdit] = useState(false)
   const [resume, setResume] = useState(null)
+
+
+  const {backendUrl,userData,userApplications,setUserApplications,fetchUserData,fetchUserApplications}=useContext(AppContext)
+  
+
+  const updateResume = async () => {
+  try {
+    const formData = new FormData();
+    formData.append("resume", resume); // MUST match upload.single("resume")
+
+    const token = await getToken();
+
+    const { data } = await axios.post(
+      backendUrl + "/api/users/update-resume",
+      formData, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    if (data.success) {
+      await fetchUserData();
+      toast.success(data.message);
+    } else {
+      toast.error(data.message);
+    }
+
+  } catch (error) {
+    toast.error(error.message);
+  }
+
+  setIsEdit(false);
+  setResume(null);
+};
+
+useEffect(() => {
+  if(user){
+    fetchUserApplications()
+  }
+
+}, [user])
+
 
   return (
     <>
@@ -17,11 +69,13 @@ const Applications = () => {
         <h2 className='text-xl font-semibold'>Your Resume</h2>
 
         <div className='flex gap-3 mb-6 mt-3'>
-          {isEdit ? (
+          {isEdit || userData && userData.resume===""? (
             <>
               <label htmlFor='resumeUpload' className='flex items-center'>
                 <p className='bg-blue-100 text-blue-600 px-4 py-2 rounded-lg mr-2'>
-                  Select Resume
+                  {
+                    resume?resume.name:"Select Resume"
+                  }
                 </p>
                 <input
                   id='resumeUpload'
@@ -35,14 +89,14 @@ const Applications = () => {
 
               <button
                 className='bg-green-100 border border-green-400 rounded-lg px-4 py-2'
-                onClick={() => setIsEdit(false)}
+                onClick={updateResume}
               >
                 Save
               </button>
             </>
           ) : (
             <div className='flex gap-2'>
-              <a href="" className='bg-blue-100 text-blue-600 px-4 py-2 rounded-lg'>
+              <a href={userData.resume} className='bg-blue-100 text-blue-600 px-4 py-2 rounded-lg' target='_blank'>
                 Resume
               </a>
               <button
@@ -69,15 +123,15 @@ const Applications = () => {
           </thead>
 
           <tbody>
-  {jobsApplied.map((job, index) => (
+  {userApplications.map((job, index) => (
     true ? (
       <tr key={index} className='border-b last:border-b-0'>
         <td className='flex items-center py-3 px-4 gap-2'>
-          <img src={job.logo} alt="" className='h-8 w-8' />
-          {job.company}
+          <img src={job.companyId.image} alt="" className='h-8 w-8' />
+          {job.companyId.name}
         </td>
-        <td className='py-3 px-4'>{job.title}</td>
-        <td className='py-3 px-4 max-sm:hidden'>{job.location}</td>
+        <td className='py-3 px-4'>{job.jobId.title}</td>
+        <td className='py-3 px-4 max-sm:hidden'>{job.jobId.location}</td>
         <td className='py-3 px-4 max-sm:hidden'>
           {moment(job.date).format('DD MMM YYYY')}
         </td>
