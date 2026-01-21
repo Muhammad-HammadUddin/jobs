@@ -1,5 +1,4 @@
 import Job from "../models/Job.js"
-import { useParams } from 'react-router-dom';
 
 export const getjobs = async(req, res) => {
     try {
